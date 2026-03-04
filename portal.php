@@ -40,14 +40,32 @@ $user = current_user();
 	<h2>Map view</h2>
 	<div id="map" style="width:100%;height:400px;"></div>
 	<?php
-	// gather marker data from uploads (CSV or JSON)
-	// start with some fixed Bradford locations (schools, parks)
-	$markers = [
-	    ['lat'=>53.7975,'lng'=>-1.7595,'name'=>'City Park'],
-	    ['lat'=>53.8090,'lng'=>-1.7610,'name'=>'Bradford Grammar School'],
-	    ['lat'=>53.7810,'lng'=>-1.7500,'name'=>'Roberts Park'],
-	];
+	// gather marker data from uploads (CSV or JSON) and from assets database
+	$markers = [];
 	$db = get_db();
+	
+	// Get assets from database with categories
+	$stmt = $db->prepare('
+		SELECT a.id, a.name, a.latitude, a.latitude as lat, a.longitude, a.longitude as lng, 
+		       c.color, c.name as category, a.description
+		FROM assets a
+		LEFT JOIN categories c ON a.category_id = c.id
+		ORDER BY a.name
+	');
+	$stmt->execute();
+	while ($row = $stmt->fetch()) {
+		$markers[] = [
+			'lat' => (float)$row['lat'],
+			'lng' => (float)$row['lng'],
+			'name' => $row['name'],
+			'description' => $row['description'],
+			'category' => $row['category'],
+			'color' => $row['color'] ?? '#8B3A62',
+			'type' => 'asset'
+		];
+	}
+	
+	// Get data from uploads (CSV or JSON)
 	$stmt = $db->prepare('SELECT filename, data FROM uploads WHERE user_id = ?');
 	$stmt->execute([$user['id']]);
 	while ($row = $stmt->fetch()) {
@@ -56,7 +74,7 @@ $user = current_user();
 		if (is_array($parsed)) {
 			foreach ($parsed as $item) {
 				if (isset($item['lat'], $item['lng'])) {
-					$markers[] = $item;
+					$markers[] = array_merge($item, ['type' => 'upload']);
 				}
 			}
 		} else {
@@ -65,7 +83,12 @@ $user = current_user();
 			foreach ($lines as $line) {
 				$cols = str_getcsv($line);
 				if (count($cols) >= 2 && is_numeric($cols[0]) && is_numeric($cols[1])) {
-					$markers[] = ['lat' => (float)$cols[0], 'lng' => (float)$cols[1], 'name' => $cols[2] ?? ''];
+					$markers[] = [
+						'lat' => (float)$cols[0],
+						'lng' => (float)$cols[1],
+						'name' => $cols[2] ?? '',
+						'type' => 'upload'
+					];
 				}
 			}
 		}
@@ -78,21 +101,44 @@ $user = current_user();
 				center: {lat: 53.795, lng: -1.759},
 				zoom: 12
 			});
+			
 			userMarkers.forEach(function(m) {
+				var color = m.color || '#8B3A62';
 				var marker = new google.maps.Marker({
 					position: {lat: m.lat, lng: m.lng},
 					map: map,
-					title: m.name || ''
+					title: m.name || '',
+					icon: getMarkerIcon(color)
 				});
-				if (m.name) {
-					var infowindow = new google.maps.InfoWindow({
-						content: '<div><strong>' + m.name + '</strong></div>'
-					});
-					marker.addListener('click', function() {
-						infowindow.open(map, marker);
-					});
+				
+				var infoContent = '<div style="font-size: 12px;"><strong>' + (m.name || 'Location') + '</strong>';
+				if (m.category) {
+					infoContent += '<br><span style="color: ' + color + '; font-weight: bold;">📁 ' + m.category + '</span>';
 				}
+				if (m.description) {
+					infoContent += '<br><em>' + m.description + '</em>';
+				}
+				infoContent += '<br><small>Lat: ' + m.lat.toFixed(4) + ', Lng: ' + m.lng.toFixed(4) + '</small>';
+				infoContent += '</div>';
+				
+				var infowindow = new google.maps.InfoWindow({
+					content: infoContent
+				});
+				marker.addListener('click', function() {
+					infowindow.open(map, marker);
+				});
 			});
+		}
+		
+		function getMarkerIcon(color) {
+			return {
+				path: google.maps.SymbolPath.CIRCLE,
+				scale: 8,
+				fillColor: color,
+				fillOpacity: 0.8,
+				strokeColor: '#fff',
+				strokeWeight: 2
+			};
 		}
 	</script>
 	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDImJtfn0nnJFFMip7GH31God21pPdsv-4&callback=initMap" async defer></script>

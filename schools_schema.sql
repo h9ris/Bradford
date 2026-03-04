@@ -1,0 +1,52 @@
+-- Schools Table
+CREATE TABLE IF NOT EXISTS schools (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    urn VARCHAR(10) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    street VARCHAR(255),
+    town VARCHAR(100),
+    postcode VARCHAR(10),
+    school_type VARCHAR(100),
+    religious_character VARCHAR(100),
+    gender VARCHAR(50),
+    min_age INT,
+    max_age INT,
+    latitude DECIMAL(10, 8),
+    longitude DECIMAL(11, 8),
+    status VARCHAR(50) DEFAULT 'Open',
+    established_date DATE,
+    closed_date DATE,
+    phone VARCHAR(20),
+    email VARCHAR(255),
+    website VARCHAR(255),
+    headteacher VARCHAR(255),
+    total_pupils INT,
+    description LONGTEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_urn (urn),
+    INDEX idx_name (name),
+    INDEX idx_town (town),
+    INDEX idx_status (status),
+    INDEX idx_coordinates (latitude, longitude)
+);
+
+-- School Performance Data Table
+CREATE TABLE IF NOT EXISTS school_performance (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    school_id INT,
+    urn VARCHAR(10),
+    academic_year VARCHAR(20),
+    ks2_progress DECIMAL(5, 2),
+    ks4_progress DECIMAL(5, 2),
+    attainment_8 DECIMAL(5, 2),
+    progress_8 DECIMAL(5, 2),
+    ebacc_participation DECIMAL(5, 2),
+    ofsted_rating VARCHAR(50),
+    ofsted_date DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
+    INDEX idx_school_id (school_id),
+    INDEX idx_urn (urn),
+    INDEX idx_academic_year (academic_year)
+);

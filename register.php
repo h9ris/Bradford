@@ -22,8 +22,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	if (empty($errors)) {
 		try {
 			$makeAdmin = ($adminCode === ADMIN_REGISTRATION_CODE);
-			register_user($email, $password, $name, $makeAdmin);
-			// TODO: send confirmation email
+			$userId = register_user($email, $password, $name, $makeAdmin);
+			
+			// Send registration confirmation email
+			$displayName = !empty($name) ? $name : 'User';
+			send_registration_email($email, $displayName);
+			
 			header('Location: index.php?registered=1');
 			exit;
 		} catch (PDOException $e) {

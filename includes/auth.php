@@ -3,10 +3,166 @@
 
 require_once __DIR__ . '/db.php';
 
+// PHPMailer for email sending
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
 session_start();
 
 // simple admin code for registration (replace with secure mechanism in real use)
 define('ADMIN_REGISTRATION_CODE', 'BradfordAdmin2026');
+
+// Email configuration
+define('MAIL_FROM_EMAIL', getenv('MAIL_FROM_EMAIL') ?: 'noreply@bradfordportal.local');
+define('MAIL_FROM_NAME', getenv('MAIL_FROM_NAME') ?: 'Bradford Portal');
+define('MAIL_SMTP_HOST', getenv('MAIL_SMTP_HOST') ?: 'localhost');
+define('MAIL_SMTP_PORT', getenv('MAIL_SMTP_PORT') ?: 1025); // MailHog default
+define('MAIL_SMTP_USER', getenv('MAIL_SMTP_USER') ?: '');
+define('MAIL_SMTP_PASS', getenv('MAIL_SMTP_PASS') ?: '');
+define('MAIL_SMTP_SECURE', getenv('MAIL_SMTP_SECURE') ?: false); // Set to 'tls' or 'ssl' for real SMTP
+
+/**
+ * Send email using PHPMailer
+ */
+function send_email($toEmail, $toName, $subject, $htmlBody, $textBody = null)
+{
+    try {
+        $mail = new PHPMailer(true);
+        
+        // SMTP configuration
+        if (MAIL_SMTP_HOST !== 'localhost') {
+            $mail->isSMTP();
+            $mail->Host = MAIL_SMTP_HOST;
+            $mail->Port = MAIL_SMTP_PORT;
+            $mail->SMTPAuth = !empty(MAIL_SMTP_USER);
+            if (MAIL_SMTP_USER) {
+                $mail->Username = MAIL_SMTP_USER;
+                $mail->Password = MAIL_SMTP_PASS;
+            }
+            if (MAIL_SMTP_SECURE) {
+                $mail->SMTPSecure = MAIL_SMTP_SECURE;
+            }
+        } else {
+            // Local development - use sendmail or MailHog
+            $mail->isSMTP();
+            $mail->Host = MAIL_SMTP_HOST;
+            $mail->Port = MAIL_SMTP_PORT;
+            $mail->SMTPAuth = false;
+        }
+        
+        // Recipients
+        $mail->setFrom(MAIL_FROM_EMAIL, MAIL_FROM_NAME);
+        $mail->addAddress($toEmail, $toName);
+        
+        // Content
+        $mail->isHTML(true);
+        $mail->Subject = $subject;
+        $mail->Body = $htmlBody;
+        if ($textBody) {
+            $mail->AltBody = $textBody;
+        }
+        
+        $mail->send();
+        return true;
+        
+    } catch (Exception $e) {
+        error_log("Email sending failed: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Send registration confirmation email
+ */
+function send_registration_email($email, $name)
+{
+    $subject = 'Welcome to Bradford Portal';
+    
+    $htmlBody = "
+    <html>
+    <body style='font-family: Arial, sans-serif;'>
+        <h2 style='color: #8B3A62;'>Welcome to Bradford Portal</h2>
+        <p>Hello " . htmlspecialchars($name) . ",</p>
+        <p>Thank you for registering with Bradford Portal. Your account has been successfully created.</p>
+        <p>You can now <a href='http://localhost/BradfordPortal./index.php'>log in</a> with your email and password.</p>
+        <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;'>
+        <p style='color: #666; font-size: 12px;'>
+            If you did not create this account, please ignore this email.<br>
+            Bradford Portal Team
+        </p>
+    </body>
+    </html>";
+    
+    $textBody = "
+Welcome to Bradford Portal
+
+Hello $name,
+
+Thank you for registering with Bradford Portal. Your account has been successfully created.
+
+You can now log in at: http://localhost/BradfordPortal./index.php
+
+If you did not create this account, please ignore this email.
+
+Bradford Portal Team";
+    
+    return send_email($email, $name, $subject, $htmlBody, $textBody);
+}
+
+/**
+ * Send password reset email
+ */
+function send_reset_email($email, $name, $resetToken)
+{
+    $resetLink = 'http://localhost/BradfordPortal./reset.php?token=' . urlencode($resetToken);
+    $subject = 'Bradford Portal - Password Reset';
+    
+    $htmlBody = "
+    <html>
+    <body style='font-family: Arial, sans-serif;'>
+        <h2 style='color: #8B3A62;'>Password Reset Request</h2>
+        <p>Hello " . htmlspecialchars($name) . ",</p>
+        <p>We received a request to reset your password. Click the link below to create a new password:</p>
+        <p>
+            <a href='$resetLink' style='
+                display: inline-block;
+                padding: 10px 20px;
+                background-color: #8B3A62;
+                color: white;
+                text-decoration: none;
+                border-radius: 4px;
+            '>Reset Password</a>
+        </p>
+        <p>Or copy and paste this link:</p>
+        <p><code>$resetLink</code></p>
+        <p style='color: #d9534f;'><strong>⚠️ This link expires in 15 minutes.</strong></p>
+        <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;'>
+        <p style='color: #666; font-size: 12px;'>
+            If you did not request a password reset, please ignore this email.<br>
+            Bradford Portal Team
+        </p>
+    </body>
+    </html>";
+    
+    $textBody = "
+Bradford Portal - Password Reset
+
+Hello $name,
+
+We received a request to reset your password. Copy the link below and paste it in your browser:
+
+$resetLink
+
+This link expires in 15 minutes.
+
+If you did not request a password reset, please ignore this email.
+
+Bradford Portal Team";
+    
+    return send_email($email, $name, $subject, $htmlBody, $textBody);
+}
 
 /**
  * Hash a password using bcrypt.
@@ -120,17 +276,22 @@ function generate_token($length = 32)
 function send_password_reset($email)
 {
 	$db = get_db();
-	$stmt = $db->prepare('SELECT id FROM users WHERE email = ?');
+	$stmt = $db->prepare('SELECT id, name FROM users WHERE email = ?');
 	$stmt->execute([$email]);
 	$user = $stmt->fetch();
 	if (!$user) {
 		return false;
 	}
+	
 	$token = generate_token(16);
 	$expires = date('Y-m-d H:i:s', time() + 15*60);
 	$stmt = $db->prepare('UPDATE users SET reset_token = ?, reset_expires = ? WHERE id = ?');
 	$stmt->execute([$token, $expires, $user['id']]);
-	// TODO: send an email with link including token
+	
+	// Send password reset email
+	$name = !empty($user['name']) ? decrypt_data($user['name']) : 'User';
+	send_reset_email($email, $name, $token);
+	
 	log_activity($user['id'], 'password_reset_requested');
 	return $token;
 }

@@ -34,6 +34,11 @@
 - [x] Single-point manual entry (no file needed)
 - [x] Map marker display from uploaded data
 - [x] Encryption helpers for sensitive data (user name is encrypted)
+- [x] Asset/category tables and interaction tracking
+- [x] Category management UI (admin)
+- [x] Asset CRUD interface with categories
+- [x] Map visualization of assets with colors
+- [x] Interaction count per asset
 
 ### Styling & Accessibility
 - [x] Bradford blue colour scheme (`#005ea5`)
@@ -62,11 +67,13 @@
 
 ### Two-Factor Authentication (2FA)
 - [x] TOTP helper functions stubbed in `includes/totp.php`
-- [ ] **ACTUAL TOTP SETUP AND VERIFICATION**
-  - Need TOTP library (e.g., `spomky-labs/otphp`)
-  - Need 2FA secret column in users table (can add via ALTER TABLE)
-  - Need 2FA setup page showing QR code
-  - Need 2FA verification page on login
+- [x] **ACTUAL TOTP SETUP AND VERIFICATION**
+  - spomky-labs/otphp installed via Composer
+  - `two_factor_secret` column added to `users` table
+  - `setup_2fa.php` page for QR code setup
+  - 2FA verification page on login
+  - 2FA management link on dashboard
+  - Activity log records enable/disable events
 
 ---
 

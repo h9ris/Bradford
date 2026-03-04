@@ -58,6 +58,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
     <p>As an admin you can:</p>
     <ul>
         <li><a href="manage_categories.php">Manage Asset Categories</a> - Create and manage asset categories (Schools, Parks, etc.)</li>
+        <li><a href="import_schools.php">Import Schools</a> - Upload Bradford school information CSV</li>
+        <li><a href="geocode_schools.php">🌍 Geocode Schools</a> - Add coordinates to schools using OpenStreetMap</li>
+        <li><a href="import_performance.php">📊 Import Performance Data</a> - Upload KS4/KS5 performance metrics</li>
+        <li><a href="schools.php">View Schools Directory</a> - Browse all imported schools</li>
+        <li><a href="email_config.php">📧 Email Configuration</a> - Configure and test email sending</li>
         <li><a href="reset_user.php">Reset User Password</a> - Reset a user's password</li>
         <li><a href="activity_log.php">View Activity Log</a> - See all user activities</li>
         <li><a href="api_fetch.php">Import Data from API</a> - Fetch external data sources</li>

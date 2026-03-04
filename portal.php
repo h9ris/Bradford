@@ -20,6 +20,7 @@ $user = current_user();
 		<?php endif; ?>
 		<p>
 			<a href="manage_assets.php">🗺️ Manage Assets</a> |
+			<a href="schools.php">📚 Schools Directory</a> |
 			<a href="setup_2fa.php">🔐 Two-Factor Authentication</a> |
 			<a href="logout.php">Logout</a>
 		</p>
@@ -62,6 +63,26 @@ $user = current_user();
 			'category' => $row['category'],
 			'color' => $row['color'] ?? '#8B3A62',
 			'type' => 'asset'
+		];
+	}
+	
+	// Get schools from database
+	$stmt = $db->prepare('
+		SELECT id, name, latitude as lat, longitude as lng, street, postcode, school_type, status
+		FROM schools
+		WHERE status = "Open" AND latitude IS NOT NULL AND longitude IS NOT NULL
+		ORDER BY name
+	');
+	$stmt->execute();
+	while ($row = $stmt->fetch()) {
+		$markers[] = [
+			'lat' => (float)$row['lat'],
+			'lng' => (float)$row['lng'],
+			'name' => $row['name'],
+			'description' => $row['school_type'] . ' | ' . $row['street'] . ', ' . $row['postcode'],
+			'category' => 'Schools',
+			'color' => '#1976D2',
+			'type' => 'school'
 		];
 	}
 	

@@ -20,6 +20,7 @@ $user = current_user();
 		<?php endif; ?>
 		<p>
 			<a href="manage_assets.php">🗺️ Manage Assets</a> |
+			<a href="data_visualization.php">📊 Data Visualization</a> |
 			<a href="schools.php">📚 Schools Directory</a> |
 			<a href="setup_2fa.php">🔐 Two-Factor Authentication</a> |
 			<a href="logout.php">Logout</a>

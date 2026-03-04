@@ -60,20 +60,25 @@
 ### Email Notifications
 - [x] Stub functions for registration email
 - [x] Stub functions for password reset email
-- [ ] **ACTUAL EMAIL SENDING** (requires PHPMailer or similar)
-  - Need SMTP server configured
-  - Need to call `send_registration_email()` after successful registration
-  - Need to call `send_reset_email()` after password reset requested
+- [x] **ACTUAL EMAIL SENDING** (requires PHPMailer or similar)
+  - [x] PHPMailer installed via Composer
+  - [x] SMTP server configured (localhost:1025 for MailHog, configurable for production)
+  - [x] `send_registration_email()` called after successful registration
+  - [x] `send_reset_email()` called after password reset requested
+  - [x] Professional HTML + text templates
+  - [x] Email configuration & testing page
 
 ### Two-Factor Authentication (2FA)
-- [x] TOTP helper functions stubbed in `includes/totp.php`
-- [x] **ACTUAL TOTP SETUP AND VERIFICATION**
-  - spomky-labs/otphp installed via Composer
-  - `two_factor_secret` column added to `users` table
-  - `setup_2fa.php` page for QR code setup
-  - 2FA verification page on login
-  - 2FA management link on dashboard
-  - Activity log records enable/disable events
+- [x] TOTP helper functions fully implemented in `includes/totp.php`
+- [x] **ACTUAL TOTP SETUP AND VERIFICATION** (COMPLETE)
+  - [x] spomky-labs/otphp installed via Composer (v11.4)
+  - [x] `two_factor_secret` column added to `users` table
+  - [x] `setup_2fa.php` page for QR code setup + management
+  - [x] 2FA verification page on login (2-step authentication)
+  - [x] 2FA management link on dashboard (portal.php)
+  - [x] Activity log records enable/disable events
+  - [x] Supports all TOTP authenticator apps (Google Authenticator, Authy, etc.)
+  - [x] Time-based verification with ±60 second tolerance window
 
 ---
 
@@ -117,7 +122,44 @@
 
 ---
 
-## 🚀 Quick Setup for Missing Features
+## ✨ Newly Completed (March 4, 2026)
+
+### Schools Management System
+- [x] `schools` database table with 20+ fields
+- [x] `school_performance` table for KS4/KS5 metrics
+- [x] School import page (`import_schools.php`)
+- [x] Schools directory with search/filtering (`schools.php`)
+- [x] Town filter, school type filter, name search
+
+### School Geocoding
+- [x] Geocoding page (`geocode_schools.php`)
+- [x] OpenStreetMap Nominatim integration
+- [x] Automatic address-to-coordinates conversion
+- [x] Bradford city center fallback
+- [x] Batch geocoding (~30 seconds for 100 schools)
+
+### Performance Data
+- [x] Performance data import (`import_performance.php`)
+- [x] KS4/KS5 metrics by URN linking
+- [x] Academic year tracking
+- [x] Attainment 8, Progress 8, OFSTED fields
+
+### Map Integration
+- [x] Schools display on portal map as **blue markers**
+- [x] Custom assets remain with **category colors**
+- [x] Info windows show school details
+- [x] Clickable markers with full information
+
+### Email System
+- [x] PhpMailer integration (installed)
+- [x] Registration confirmation emails
+- [x] Password reset emails with secure tokens
+- [x] Email configuration page (`email_config.php`)
+- [x] MailHog support for development
+- [x] Production SMTP configuration ready
+- [x] Professional HTML + text templates
+
+---
 
 ### To Add Email Sending:
 

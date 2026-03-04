@@ -1,0 +1,6 @@
+{
+    "require": {
+        "spomky-labs/otphp": "^11.4",
+        "phpmailer/phpmailer": "^7.0"
+    }
+}

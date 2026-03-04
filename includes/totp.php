@@ -1,57 +1,65 @@
 <?php
 /**
  * 2FA / TOTP helper for Bradford Portal
- * 
- * To use: install TOTP library via Composer
- *   composer require sonata-project/google-authenticator
- * 
- * Or use a simpler solution like Spomky-Labs/otphp
+ * Uses spomky-labs/otphp for TOTP generation and verification
  */
 
-// require 'vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
+
+use OTPHP\TOTP;
 
 /**
- * Generate a TOTP secret for a user
- * This secret is shared between the user's authenticator app and the server
+ * Generate a new TOTP secret for a user
+ * Returns both the secret and a provisioning URI for QR code generation
  */
-function generate_totp_secret()
+function generate_totp_secret($email, $issuer = 'Bradford Portal')
 {
-    // Generate a random 32-character secret
-    return bin2hex(random_bytes(16));
+    $totp = TOTP::create();
+    $totp->setLabel($email);
+    $totp->setIssuer($issuer);
+    
+    $secret = $totp->getSecret();
+    $provisioningUri = $totp->getProvisioningUri();
+    
+    return [
+        'secret' => $secret,
+        'uri' => $provisioningUri
+    ];
 }
 
 /**
- * Generate a QR code URL for Google Authenticator setup
- * User scans this with their phone to set up 2FA
+ * Get the provisioning URI for QR code generation
+ * This is what the user scans with Google Authenticator / Authy
  */
-function get_totp_qr_code($email, $secret)
+function get_totp_qr_uri($email, $secret, $issuer = 'Bradford Portal')
 {
-    // Format: otpauth://totp/Bradford Portal:email@example.com?secret=...&issuer=Bradford%20Portal
-    $url = sprintf(
-        'otpauth://totp/Bradford%%20Portal:%s?secret=%s&issuer=Bradford%%20Portal',
-        urlencode($email),
-        urlencode($secret)
-    );
-    
-    // Use Google Charts API to generate QR code
-    $qrUrl = 'https://chart.googleapis.com/chart?chs=300x300&chld=M|0&cht=qr&chl=' . urlencode($url);
-    return $qrUrl;
+    $totp = TOTP::create($secret);
+    $totp->setLabel($email);
+    $totp->setIssuer($issuer);
+    return $totp->getProvisioningUri();
+}
+
+/**
+ * Generate a QR code image URL using Google Charts
+ */
+function get_totp_qr_code_url($uri)
+{
+    return 'https://chart.googleapis.com/chart?chs=300x300&chld=M|0&cht=qr&chl=' . urlencode($uri);
 }
 
 /**
  * Verify a TOTP code entered by the user
- * This is where you'd use an authenticator library to validate the 6-digit code
+ * Returns true if the code is valid, false otherwise
  */
 function verify_totp_code($secret, $code, $allowedWindow = 1)
 {
-    // This is a stub showing the concept
-    // In production, use:
-    //   composer require spomky-labs/otphp
-    //   $totp = \OTPHP\TOTP::create($secret);
-    //   return $totp->verify($code);
-    
-    error_log("TOTP verification stub called for secret: $secret, code: $code");
-    return true; // stub: always return true for now
+    try {
+        $totp = TOTP::create($secret);
+        // The verify() method checks the code with a time window (default ±1 time step)
+        return $totp->verify($code, time(), $allowedWindow);
+    } catch (Exception $e) {
+        return false;
+    }
 }
 
 ?>

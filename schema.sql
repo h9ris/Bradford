@@ -17,6 +17,48 @@ CREATE TABLE users (
     reset_expires DATETIME DEFAULT NULL
 ) ENGINE=InnoDB;
 
+-- Asset categories (e.g., Schools, Parks, Libraries, etc.)
+CREATE TABLE categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    description TEXT,
+    color VARCHAR(7) DEFAULT '#8B3A62',
+    icon VARCHAR(50) DEFAULT 'pin',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- Asset data points (locations with categories)
+CREATE TABLE assets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    latitude DECIMAL(10, 8) NOT NULL,
+    longitude DECIMAL(11, 8) NOT NULL,
+    category_id INT DEFAULT NULL,
+    description TEXT,
+    details JSON,
+    created_by INT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (category_id) REFERENCES categories(id),
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    INDEX (category_id),
+    INDEX (created_by)
+) ENGINE=InnoDB;
+
+-- Asset interactions (track jobs, visits, activities against assets)
+CREATE TABLE asset_interactions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    asset_id INT NOT NULL,
+    interaction_type VARCHAR(50),
+    description TEXT,
+    user_id INT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (asset_id) REFERENCES assets(id),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    INDEX (asset_id),
+    INDEX (created_at)
+) ENGINE=InnoDB;
+
 -- uploaded data entries
 CREATE TABLE uploads (
     id INT AUTO_INCREMENT PRIMARY KEY,

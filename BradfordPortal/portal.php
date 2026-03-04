@@ -14,16 +14,10 @@ $user = current_user();
 </head>
 <body>
 	<h1>Welcome, <?=htmlspecialchars($user['name'] ?: $user['email'])?></h1>
-	<div style="margin-bottom: 20px;">
-		<?php if ($user['is_admin']): ?>
-			<p><a href="admin.php">Go to admin dashboard</a></p>
-		<?php endif; ?>
-		<p>
-			<a href="manage_assets.php">🗺️ Manage Assets</a> |
-			<a href="setup_2fa.php">🔐 Two-Factor Authentication</a> |
-			<a href="logout.php">Logout</a>
-		</p>
-	</div>
+	<?php if ($user['is_admin']): ?>
+		<p><a href="admin.php">Go to admin dashboard</a></p>
+	<?php endif; ?>
+	<p><a href="logout.php">Logout</a></p>
 	<h2>Upload data</h2>
 	<form method="post" enctype="multipart/form-data" action="upload.php">
 		<input type="file" name="datafile" accept=".csv,.json">

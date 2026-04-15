@@ -1,0 +1,17 @@
+{
+    "name": "bradford/portal",
+    "description": "Bradford Council Asset Portal with Maps Integration",
+    "type": "project",
+    "license": "proprietary",
+    "autoload": {
+        "psr-4": {
+            "": "includes/"
+        }
+    },
+    "require": {
+        "php": ">=7.4",
+        "phpmailer/phpmailer": "^7.0",
+        "spomky-labs/otphp": "^11.4"
+    },
+    "minimum-stability": "stable"
+}
